@@ -159,6 +159,13 @@ class HTML5Translator(nodes.NodeVisitor):
     def depart_Text(self, node):
         pass
 
+    def visit_comment(self, node):
+        """Simply omit comments."""
+        pass
+
+    def depart_comment(self, node):
+        pass
+
     def visit_reference(self, node):
         atts = {'class': 'reference'}
         if 'refuri' in node:
@@ -280,14 +287,15 @@ class HTML5Translator(nodes.NodeVisitor):
             self.el.pop()
 
     def visit_subtitle(self, node):
-        self.el.append(etree.SubElement(self.local_header().xpath("hgroup")[0],
+        self.wrap_in_section(node)
+        self.el.append(etree.SubElement(self.local_header(),
             "h" + str(self.level + 1)))
 
     def depart_subtitle(self, node):
         self.el.pop()
 
     def visit_section(self, node):
-        self.visit("section", node)
+        self.section = self.visit("section", node)
 
     def depart_section(self, node):
         self.level -= 1
@@ -449,6 +457,16 @@ class HTML5Translator(nodes.NodeVisitor):
     def depart_label(self, node):
         self.depart()
 
+    def wrap_in_section(self, node):
+        """Wrap top level paragraphs in a section element."""
+        if (isinstance(node.parent, nodes.document) and
+            self.section.tag == 'article'):
+            self.section = self.visit('section', node, id='id1')
+
+    def visit_paragraph(self, node):
+        self.wrap_in_section(node)
+        self.visit('paragraph', node)
+
     def unknown_visit(self, node):
         simple_element = self.simple_elements[node.__class__.__name__]
         cur_el = self.visit(simple_element.html_tag_name, node)
@@ -470,7 +488,6 @@ class Tag:
         self.attribute_map = attribute_map
 
 simple_elements = {         # HTML equiv.
-    "paragraph": Tag("p"),
     "abbreviation": Tag("abbr"),
     "acronym": Tag("acronym"),
     "emphasis": Tag("em"),
@@ -496,7 +513,10 @@ simple_elements = {         # HTML equiv.
     "option_string": Tag("span", "option"),
     "description": Tag("td"),
     "block_quote": Tag("blockquote"),
+    "field": Tag("tr", "field"),
+    "field_body": Tag("td", "field-body"),
     "attribution": Tag("cite"),
+    "field_name": Tag("td", "field-name")
     }
 
 HTML5Translator.simple_elements = simple_elements
