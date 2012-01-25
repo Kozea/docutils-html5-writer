@@ -455,7 +455,7 @@ class HTML5Translator(nodes.NodeVisitor):
 
     def visit_paragraph(self, node):
         self.wrap_in_section(node)
-        self.visit('paragraph', node)
+        self.visit('p', node)
 
     def visit_tgroup(self, node):
         pass
@@ -511,7 +511,9 @@ simple_elements = {         # HTML equiv.
     "field": Tag("tr", "field"),
     "field_body": Tag("td", "field-body"),
     "attribution": Tag("cite"),
-    "field_name": Tag("td", "field-name")
+    "field_name": Tag("td", "field-name"),
+    "superscript": Tag("sup"),
+    "subscript": Tag("sub")
     }
 
 HTML5Translator.simple_elements = simple_elements
