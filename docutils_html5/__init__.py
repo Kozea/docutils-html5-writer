@@ -467,6 +467,12 @@ class HTML5Translator(nodes.NodeVisitor):
         self.wrap_in_section(node)
         self.visit('paragraph', node)
 
+    def visit_tgroup(self, node):
+        pass
+
+    def depart_tgroup(self, node):
+        pass
+
     def unknown_visit(self, node):
         simple_element = self.simple_elements[node.__class__.__name__]
         cur_el = self.visit(simple_element.html_tag_name, node)
@@ -493,7 +499,6 @@ simple_elements = {         # HTML equiv.
     "emphasis": Tag("em"),
     "strong": Tag("strong"),
     "table": Tag("table"),
-    "tgroup": Tag("tgroup"),
     "row": Tag("tr"),
     "tbody": Tag("tbody"),
     "image": Tag("img", attribute_map={"uri": "src", "alt": "alt"}),
