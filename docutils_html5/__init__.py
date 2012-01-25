@@ -67,10 +67,7 @@ Docutils imports
 import docutils
 from docutils import nodes, writers
 
-
-def text_content(node):
-    return etree.XPath("string()")
-
+text_content = etree.XPath("string()")
 
 class Writer(writers.Writer):
 
@@ -265,26 +262,19 @@ class HTML5Translator(nodes.NodeVisitor):
                 attrib={'name': attr, 'content': val})
 
     def visit_title(self, node):
-        try:
-            self.level
-        except AttributeError:
-            self.level = 1
-            self.in_document_title = True
-        else:
-            self.level += 1
+        self.level += 1
         title = etree.SubElement(self.local_header(), "h" + str(self.level))
-        if self.in_document_title:
+        if self.section.tag == 'article':
+            self.in_document_title = True
             self.title_node = title
-        else:
-            self.el.append(title)
+        self.el.append(title)
 
     def depart_title(self, node):
         if self.in_document_title:
             self.in_document_title = False
             self.html_title = tostring(self.title_node)
             self.title = text_content(self.title_node)
-        else:
-            self.el.pop()
+        self.el.pop()
 
     def visit_subtitle(self, node):
         self.wrap_in_section(node)
