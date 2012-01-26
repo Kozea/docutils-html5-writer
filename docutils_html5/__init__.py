@@ -115,8 +115,6 @@ class HTML5Translator(nodes.NodeVisitor):
     def __init__(self, document):
         nodes.NodeVisitor.__init__(self, document)
         self.settings = document.settings
-        import pdb
-        pdb.set_trace()
         self.top_level_id = getattr(document.settings, 'top_level_id', None)
         self.top_level_class = getattr(document.settings, 'top_level_class',
                 None)
