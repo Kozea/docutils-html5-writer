@@ -115,6 +115,11 @@ class HTML5Translator(nodes.NodeVisitor):
     def __init__(self, document):
         nodes.NodeVisitor.__init__(self, document)
         self.settings = document.settings
+        import pdb
+        pdb.set_trace()
+        self.top_level_id = getattr(document.settings, 'top_level_id', None)
+        self.top_level_class = getattr(document.settings, 'top_level_class',
+                None)
         if hasattr(self.settings, 'initial_header_level'):
             self.level = self.settings.initial_header_level - 1
         self.html_title = ''
@@ -187,9 +192,13 @@ class HTML5Translator(nodes.NodeVisitor):
         self.head = etree.SubElement(self.html, "head")
         # The body element everything is to be added to
         self.body = etree.SubElement(self.html, "body")
-        self.article = etree.SubElement(self.body, "article")
+        attrs = {}
+        if self.top_level_id:
+            attrs['id'] = self.top_level_id
+        if self.top_level_class:
+            attrs['class'] = self.top_level_class
+        self.article = etree.SubElement(self.body, "article", **attrs)
         # Namespacing everything for the CSS
-        self.article.set("class", "docutils")
         self.section = self.article
         # Meta-information goes here
         #self.header = etree.SubElement(self.article, "header")
@@ -228,6 +237,11 @@ class HTML5Translator(nodes.NodeVisitor):
         if 'id' not in attrs:
             if node.get('ids', []):
                 attrs['id'] = node.get('ids')[0]
+        classes = node.get('classes', [])
+        previous_class = attrs.get('class', '')
+        previous_class += ' '.join(classes)
+        if previous_class:
+            attrs['class'] = previous_class
         self.set_cur_el(etree.SubElement(self.cur_el(), name, **attrs))
         return self.cur_el()
 
