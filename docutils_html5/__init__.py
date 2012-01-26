@@ -511,7 +511,7 @@ simple_elements = {         # HTML equiv.
     "term": Tag("dt"),
     "definition": Tag("dd"),
     "literal_block": Tag("pre"),
-    "literal": Tag("pre"),
+    "literal": Tag("samp"),
     "bullet_list": Tag("ul"),
     "list_item": Tag("li"),
     "option_list": Tag("table", "option-list"),
@@ -532,6 +532,7 @@ HTML5Translator.simple_elements = simple_elements
 
 classy_elements = ["topic"]
 
+
 def visit_rst_name_classy(self, node):
     # Can't use 'class' directly; it's a keyword
     self.visit("div",
@@ -539,6 +540,7 @@ def visit_rst_name_classy(self, node):
 
 for rst_name in classy_elements:
     setattr(HTML5Translator, "visit_" + rst_name, visit_rst_name_classy)
+
 
 def compact(html_tree):
     """
