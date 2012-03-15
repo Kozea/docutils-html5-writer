@@ -47,7 +47,7 @@ body { font-family: Gentium Basic; width: 40em; margin: 0 auto 0 auto; }
 .docutils div.footnote a { min-width: 3em; }
 """
 
-from lxml.html import tostring, etree
+from lxml.html import tostring, etree, fromstring
 from copy import deepcopy
 
 try:
@@ -68,6 +68,7 @@ import docutils
 from docutils import nodes, writers
 
 text_content = etree.XPath("string()")
+
 
 class Writer(writers.Writer):
 
@@ -229,7 +230,7 @@ class HTML5Translator(nodes.NodeVisitor):
             # may thwart some address harvesters
             ord('@'): u'&#64;',
             # TODO: convert non-breaking space only if needed?
-            0xa0: u'&nbsp;'}) # non-breaking space
+            0xa0: u'&nbsp;'})  # non-breaking space
 
     def visit(self, name, node, **attrs):
         if 'id' not in attrs:
@@ -486,6 +487,23 @@ class HTML5Translator(nodes.NodeVisitor):
                 cur_el.set(simple_element.attribute_map[k], attr)
 
     def unknown_departure(self, node):
+        self.depart()
+
+    def visit_title_reference(self, node):
+        self.visit('cite', node)
+
+    def depart_title_reference(self, node):
+        self.depart()
+
+    def visit_raw(self, node):
+        if 'html' in node.get('format', '').split():
+            t = isinstance(node.parent, nodes.TextElement) and 'span' or 'div'
+            self.visit(t, node)
+            self.cur_el().append(fromstring(node.astext()))
+        # Keep non-HTML raw text out of output:
+        raise nodes.SkipNode
+
+    def depart_raw(self, node):
         self.depart()
 
 
