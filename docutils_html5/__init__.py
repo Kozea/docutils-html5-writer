@@ -497,13 +497,19 @@ class HTML5Translator(nodes.NodeVisitor):
 
     def visit_raw(self, node):
         if 'html' in node.get('format', '').split():
-            t = isinstance(node.parent, nodes.TextElement) and 'span' or 'div'
-            self.visit(t, node)
             self.cur_el().append(fromstring(node.astext()))
         # Keep non-HTML raw text out of output:
         raise nodes.SkipNode
 
     def depart_raw(self, node):
+        self.depart()
+
+    def visit_system_message(self, node):
+        self.visit('samp', node)
+        self.visit('pre', node)
+
+    def depart_system_message(self, node):
+        self.depart()
         self.depart()
 
 
@@ -540,7 +546,6 @@ simple_elements = {         # HTML equiv.
     "strong": Tag("strong"),
     "subscript": Tag("sub"),
     "superscript": Tag("sup"),
-    "system_message": Tag("samp"),
     "table": Tag("table"),
     "tbody": Tag("tbody"),
     "term": Tag("dt"),
