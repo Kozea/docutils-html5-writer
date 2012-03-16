@@ -74,7 +74,7 @@ class Writer(writers.Writer):
 
     supported = ('html', 'html5', 'html5css3')  # Formats this writer supports
 
-    visitor_attributes = ('title', 'html_title')
+    visitor_attributes = ('title', 'html_title', 'article')
 
     def __init__(self):
         writers.Writer.__init__(self)
@@ -86,10 +86,11 @@ class Writer(writers.Writer):
         for attr in self.visitor_attributes:
             setattr(self, attr, getattr(visitor, attr))
         #Pop the header
+        self.output = visitor.astext()
+        self.article = tostring(visitor.article)
         self.fragment = deepcopy(visitor.article)
         self.fragment.remove(self.fragment[0])
         self.fragment = tostring(self.fragment)
-        self.output = visitor.astext()
 
     def assemble_parts(self):
         writers.Writer.assemble_parts(self)
@@ -127,6 +128,7 @@ class HTML5Translator(nodes.NodeVisitor):
         self.in_document_title = False
         self.settings.cloak_email_addresses = getattr(self.settings,
             'cloak_email_addresses', False)
+        self._in_topic = False
 
     def astext(self):
         compact(self.html)
@@ -155,7 +157,11 @@ class HTML5Translator(nodes.NodeVisitor):
         self.el[-1] = val
 
     def visit_Text(self, node):
-        add_text(self.cur_el(), node.astext())
+        text = node.astext()
+        if (isinstance(node.parent, nodes.footnote_reference) or
+            isinstance(node.parent, nodes.label)):
+            text = "[%s]" % text
+        add_text(self.cur_el(), text)
 
     def depart_Text(self, node):
         pass
@@ -184,7 +190,8 @@ class HTML5Translator(nodes.NodeVisitor):
         if not isinstance(node.parent, nodes.TextElement):
             assert len(node) == 1 and isinstance(node[0], nodes.image)
             atts['class'] += ' image-reference'
-        self.set_cur_el(etree.SubElement(self.cur_el(), 'a', **atts))
+        # self.set_cur_el(etree.SubElement(self.cur_el(), 'a', **atts))
+        self.visit('a', node, **atts)
 
     def visit_document(self, node):
         self.html = etree.Element("html")
@@ -238,7 +245,7 @@ class HTML5Translator(nodes.NodeVisitor):
                 attrs['id'] = node.get('ids')[0]
         classes = node.get('classes', [])
         previous_class = attrs.get('class', '')
-        previous_class += ' '.join(classes)
+        previous_class = ' '.join(classes + [previous_class])
         if previous_class:
             attrs['class'] = previous_class
         self.set_cur_el(etree.SubElement(self.cur_el(), name, **attrs))
@@ -253,6 +260,8 @@ class HTML5Translator(nodes.NodeVisitor):
     def local_header(self):
         # Get the appropriate header for attaching titles or docinfo
         tmp = self.cur_el()
+        if self._in_topic:
+            return tmp
         while True:
             if tmp.tag in ("section", "article"):
                 headers = tmp.xpath('header')
@@ -263,7 +272,27 @@ class HTML5Translator(nodes.NodeVisitor):
                 return header
             else:
                 # Go up one
-                parent = tmp.parent()
+                parent = tmp.getparent()
+                if parent == tmp:
+                    # Shouldn't happen
+                    return None
+                else:
+                    tmp = parent
+
+    def local_footer(self):
+        # Get the appropriate footer for attaching titles or docinfo
+        tmp = self.cur_el()
+        while True:
+            if tmp.tag in ("section", "article"):
+                footers = tmp.xpath('footer')
+                if len(footers) > 0:
+                    footer = footers[0]
+                else:
+                    footer = etree.SubElement(tmp, "footer")
+                return footer
+            else:
+                # Go up one
+                parent = tmp.getparent()
                 if parent == tmp:
                     # Shouldn't happen
                     return None
@@ -280,7 +309,11 @@ class HTML5Translator(nodes.NodeVisitor):
         if self.section.tag == 'article':
             self.in_document_title = True
             self.title_node = title
-        self.el.append(title)
+        if node.hasattr('refid'):
+            a = etree.SubElement(title, 'a', href='#' + node['refid'])
+            self.el.append(a)
+        else:
+            self.el.append(title)
 
     def depart_title(self, node):
         if self.in_document_title:
@@ -315,8 +348,9 @@ class HTML5Translator(nodes.NodeVisitor):
         tbodies = local_header.xpath("table/tbody")
         if len(tbodies) > 0:
             return tbodies[0]
-        return etree.SubElement(etree.SubElement(local_header, "table"),
-                "tbody")
+        return etree.SubElement(
+            etree.SubElement(
+                local_header, "table", **{'class': 'docinfo'}), "tbody")
 
     def prep_docinfo(self, human, machine):
         tr = etree.SubElement(self.local_docinfo(), "tr")
@@ -443,21 +477,26 @@ class HTML5Translator(nodes.NodeVisitor):
     def visit_footnote_reference(self, node):
         self.visit("a", node, href="#" + node.attributes['refid'],
                 id=node.attributes['ids'][0], **{"class": "ref"})
+        self.visit('sup', node)
 
     def depart_footnote_reference(self, node):
         self.depart()
-
-    def visit_footnote(self, node):
-        self.visit("div", node, **{"class": "footnote"})
-
-    def depart_footnote(self, node):
         self.depart()
 
+    def visit_footnote(self, node):
+        self.el.append(etree.SubElement(self.local_footer(), 'div'))
+
+    def depart_footnote(self, node):
+        self.el.pop()
+
     def visit_label(self, node):
-        self.visit("a", node, id=node.parent.attributes['ids'][0],
-                href="#" + node.parent.attributes['backrefs'][0])
+        self.visit("a", node,
+                   id=node.parent.attributes['ids'][0],
+                   href="#" + node.parent.attributes['backrefs'][0])
+        self.visit('sup', node)
 
     def depart_label(self, node):
+        self.depart()
         self.depart()
 
     def wrap_in_section(self, node):
@@ -512,6 +551,15 @@ class HTML5Translator(nodes.NodeVisitor):
         self.depart()
         self.depart()
 
+    def visit_topic(self, node):
+        self._in_topic = True
+        self.visit('aside', node, **{'class': node.__class__.__name__})
+
+    def depart_topic(self, node):
+        self._in_topic = False
+        self.level -= 1
+        self.depart()
+
 
 class Tag:
     def __init__(self, html_tag_name, classes=None, attribute_map={}):
@@ -554,17 +602,6 @@ simple_elements = {         # HTML equiv.
 
 HTML5Translator.simple_elements = simple_elements
 
-classy_elements = ["topic"]
-
-
-def visit_rst_name_classy(self, node):
-    # Can't use 'class' directly; it's a keyword
-    self.visit("div",
-            **{'class': self.classy_elements[node.__class__.__name__]})
-
-for rst_name in classy_elements:
-    setattr(HTML5Translator, "visit_" + rst_name, visit_rst_name_classy)
-
 
 def compact(html_tree):
     """
@@ -583,8 +620,8 @@ def compact(html_tree):
     """
     for p in html_tree.xpath("//p"):
         parent = p.getparent()
-        if len(parent) == 1 and parent.text == None:
+        if (len(parent) == 1 or p.text == None) and parent.text == None:
             parent.text = p.text
             for c in p:
                 parent.append(c)
-        parent.remove(p)
+            parent.remove(p)
