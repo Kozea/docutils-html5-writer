@@ -190,8 +190,10 @@ class HTML5Translator(nodes.NodeVisitor):
         if not isinstance(node.parent, nodes.TextElement):
             assert len(node) == 1 and isinstance(node[0], nodes.image)
             atts['class'] += ' image-reference'
-        # self.set_cur_el(etree.SubElement(self.cur_el(), 'a', **atts))
         self.visit('a', node, **atts)
+
+    def depart_reference(self, node):
+        self.depart()
 
     def visit_document(self, node):
         self.html = etree.Element("html")
@@ -280,7 +282,6 @@ class HTML5Translator(nodes.NodeVisitor):
                     tmp = parent
 
     def local_footer(self):
-        # Get the appropriate footer for attaching titles or docinfo
         tmp = self.cur_el()
         while True:
             if tmp.tag in ("section", "article"):
@@ -622,6 +623,7 @@ def compact(html_tree):
         parent = p.getparent()
         if (len(parent) == 1 or p.text == None) and parent.text == None:
             parent.text = p.text
+            index = parent.index(p)
             for c in p:
-                parent.append(c)
+                parent.insert(index, c)
             parent.remove(p)
