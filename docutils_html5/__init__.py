@@ -1,6 +1,4 @@
 #! -*- coding: utf-8 -*-
-# $Id: __init__.py 6153 2009-10-05 13:37:10Z milde $
-# Author: James H. Fisher <jameshfisher@gmail.com>
 # Copyright: This module has been placed in the public domain.
 
 """
@@ -66,6 +64,7 @@ Docutils imports
 
 import docutils
 from docutils import nodes, writers
+from docutils.transforms import writer_aux
 
 text_content = etree.XPath("string()")
 
@@ -79,6 +78,9 @@ class Writer(writers.Writer):
     def __init__(self):
         writers.Writer.__init__(self)
         self.translator_class = HTML5Translator
+
+    def get_transforms(self):
+        return writers.Writer.get_transforms(self) + [writer_aux.Admonitions]
 
     def translate(self):
         visitor = self.translator_class(self.document)
@@ -129,6 +131,7 @@ class HTML5Translator(nodes.NodeVisitor):
         self.settings.cloak_email_addresses = getattr(self.settings,
             'cloak_email_addresses', False)
         self._in_topic = False
+        self._in_admonition = False
 
     def astext(self):
         compact(self.html)
@@ -262,10 +265,8 @@ class HTML5Translator(nodes.NodeVisitor):
     def local_header(self):
         # Get the appropriate header for attaching titles or docinfo
         tmp = self.cur_el()
-        if self._in_topic:
-            return tmp
         while True:
-            if tmp.tag in ("section", "article"):
+            if tmp.tag in ("section", "article", "aside"):
                 headers = tmp.xpath('header')
                 if len(headers) > 0:
                     header = headers[0]
@@ -284,7 +285,7 @@ class HTML5Translator(nodes.NodeVisitor):
     def local_footer(self):
         tmp = self.cur_el()
         while True:
-            if tmp.tag in ("section", "article"):
+            if tmp.tag in ("section", "article", "aside"):
                 footers = tmp.xpath('footer')
                 if len(footers) > 0:
                     footer = footers[0]
@@ -306,7 +307,11 @@ class HTML5Translator(nodes.NodeVisitor):
 
     def visit_title(self, node):
         self.level += 1
-        title = etree.SubElement(self.local_header(), "h" + str(self.level))
+        if self._in_topic or self._in_admonition:
+            title = self.local_header()
+        else:
+            title = etree.SubElement(
+                self.local_header(), "h" + str(self.level))
         if self.section.tag == 'article':
             self.in_document_title = True
             self.title_node = title
@@ -494,10 +499,8 @@ class HTML5Translator(nodes.NodeVisitor):
         self.visit("a", node,
                    id=node.parent.attributes['ids'][0],
                    href="#" + node.parent.attributes['backrefs'][0])
-        self.visit('sup', node)
 
     def depart_label(self, node):
-        self.depart()
         self.depart()
 
     def wrap_in_section(self, node):
@@ -558,6 +561,15 @@ class HTML5Translator(nodes.NodeVisitor):
 
     def depart_topic(self, node):
         self._in_topic = False
+        self.level -= 1
+        self.depart()
+
+    def visit_admonition(self, node):
+        self._in_admonition = True
+        self.visit('aside', node)
+
+    def depart_admonition(self, node=None):
+        self._in_admonition = False
         self.level -= 1
         self.depart()
 
