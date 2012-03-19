@@ -636,6 +636,6 @@ def compact(html_tree):
         if (len(parent) == 1 or p.text == None) and parent.text == None:
             parent.text = p.text
             index = parent.index(p)
-            for c in p:
+            for c in reversed(p):
                 parent.insert(index, c)
             parent.remove(p)
