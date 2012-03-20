@@ -603,6 +603,7 @@ simple_elements = {         # HTML equiv.
     "option_list": Tag("table", "option-list"),
     "option_list_item": Tag("tr"),
     "option_string": Tag("span", "option"),
+    "problematic": Tag("em"),
     "row": Tag("tr"),
     "strong": Tag("strong"),
     "subscript": Tag("sub"),
