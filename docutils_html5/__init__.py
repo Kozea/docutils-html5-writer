@@ -587,6 +587,7 @@ simple_elements = {         # HTML equiv.
     "block_quote": Tag("blockquote"),
     "bullet_list": Tag("ul"),
     "caption": Tag("figcaption"),
+    "compound": Tag("div"),
     "definition": Tag("dd"),
     "definition_list": Tag("dl"),
     "description": Tag("td"),
