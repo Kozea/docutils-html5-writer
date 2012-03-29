@@ -619,23 +619,23 @@ HTML5Translator.simple_elements = simple_elements
 
 
 def compact(html_tree):
-    """
-    Given an HTML tree, compact it.  This involves:
+    """Given an HTML tree, compact it.  This involves:
 
     - finding all nodes with a single non-text child node
     - checking the pair (parent, child) in following lists,
-        and it is in the list, replace the pair with the appropriate
-        element of the two:
+      and it is in the list, replace the pair with the appropriate
+      element of the two:
 
-        Replace with parent:
-        *, p
+    Replace with parent:
+      *, p
 
-        Replace with child:
-        hgroup, h*
+    Replace with child:
+      hgroup, h*
+
     """
     for p in html_tree.xpath("//p"):
         parent = p.getparent()
-        if (len(parent) == 1 or p.text == None) and parent.text == None:
+        if not parent.text and parent.tag in ("li", "dt", "dd", "td", "th"):
             parent.text = p.text
             index = parent.index(p)
             for c in reversed(p):
