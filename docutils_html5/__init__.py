@@ -89,10 +89,10 @@ class Writer(writers.Writer):
             setattr(self, attr, getattr(visitor, attr))
         #Pop the header
         self.output = visitor.astext()
-        self.article = tostring(visitor.article)
+        self.article = tostring(visitor.article, method='xml')
         self.fragment = deepcopy(visitor.article)
         self.fragment.remove(self.fragment[0])
-        self.fragment = tostring(self.fragment)
+        self.fragment = tostring(self.fragment, method='xml')
 
     def assemble_parts(self):
         writers.Writer.assemble_parts(self)
@@ -136,7 +136,7 @@ class HTML5Translator(nodes.NodeVisitor):
     def astext(self):
         compact(self.html)
         return self.doctype + "\n" + tostring(self.html,
-                pretty_print=True)
+                pretty_print=True, method='xml')
 
     def cloak_mailto(self, uri):
         """Try to hide a mailto: URL from harvesters."""
@@ -324,7 +324,7 @@ class HTML5Translator(nodes.NodeVisitor):
     def depart_title(self, node):
         if self.in_document_title:
             self.in_document_title = False
-            self.html_title = tostring(self.title_node)
+            self.html_title = tostring(self.title_node, method='xml')
             self.title = text_content(self.title_node)
         self.el.pop()
 
