@@ -344,7 +344,7 @@ class HTML5Translator(nodes.NodeVisitor):
         self.depart()
 
     def visit_docinfo(self, node):
-        self.local_header()
+        self.local_header().set("itemscope", "itemscope")
 
     def depart_docinfo(self, node):
         pass
