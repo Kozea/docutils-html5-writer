@@ -486,7 +486,6 @@ class HTML5Translator(nodes.NodeVisitor):
 
     def depart_footnote_reference(self, node):
         self.depart()
-        self.depart()
 
     def visit_footnote(self, node):
         self.el.append(etree.SubElement(self.local_footer(), 'div'))
