@@ -343,12 +343,6 @@ class HTML5Translator(nodes.NodeVisitor):
         self.level -= 1
         self.depart()
 
-    def visit_docinfo(self, node):
-        self.local_header().set("itemscope", "true")
-
-    def depart_docinfo(self, node):
-        pass
-
     def local_docinfo(self):
         local_header = self.local_header()
         tbodies = local_header.xpath("table/tbody")
@@ -483,7 +477,6 @@ class HTML5Translator(nodes.NodeVisitor):
     def visit_footnote_reference(self, node):
         self.visit("a", node, href="#" + node.attributes['refid'],
                 id=node.attributes['ids'][0], **{"class": "ref"})
-        self.visit('sup', node)
 
     def depart_footnote_reference(self, node):
         self.depart()
