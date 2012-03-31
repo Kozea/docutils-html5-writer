@@ -343,6 +343,12 @@ class HTML5Translator(nodes.NodeVisitor):
         self.level -= 1
         self.depart()
 
+    def visit_docinfo(self, node):
+        self.local_header()
+
+    def depart_docinfo(self, node):
+        pass
+
     def local_docinfo(self):
         local_header = self.local_header()
         tbodies = local_header.xpath("table/tbody")
