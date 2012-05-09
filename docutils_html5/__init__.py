@@ -124,6 +124,8 @@ class HTML5Translator(nodes.NodeVisitor):
                 None)
         if hasattr(self.settings, 'initial_header_level'):
             self.level = self.settings.initial_header_level - 1
+        else:
+            self.level = 0
         self.html_title = ''
         self.title = ''
         self.title_node = None
