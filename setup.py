@@ -4,6 +4,6 @@ setup(
  version='0.0.1',
  author='James H. Fisher, Kozea',
  license='public domain',
- install_requires=['docutils'],
+ install_requires=['docutils', 'html5lib'],
  packages=find_packages(),
 )

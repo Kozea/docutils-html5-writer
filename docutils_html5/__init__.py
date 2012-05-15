@@ -45,7 +45,7 @@ body { font-family: Gentium Basic; width: 40em; margin: 0 auto 0 auto; }
 .docutils div.footnote a { min-width: 3em; }
 """
 
-from lxml.html import tostring, etree, fromstring
+from lxml.html import etree, fragment_fromstring
 from copy import deepcopy
 
 try:
@@ -65,8 +65,20 @@ Docutils imports
 import docutils
 from docutils import nodes, writers
 from docutils.transforms import writer_aux
+from html5lib import treewalkers, serializer
 
 text_content = etree.XPath("string()")
+
+
+def tostring(lxmltree, xhtml=True, options=None, encoding='utf8'):
+    options = options or {'omit_optional_tags': False}
+    walker = treewalkers.getTreeWalker('lxml')
+    stream = walker(lxmltree)
+    if xhtml:
+        s = serializer.xhtmlserializer.XHTMLSerializer(**options)
+    else:
+        s = serializer.htmlserializer.HTMLSerializer(**options)
+    return s.render(stream, encoding)
 
 
 class Writer(writers.Writer):
@@ -96,10 +108,10 @@ class Writer(writers.Writer):
             setattr(self, attr, getattr(visitor, attr))
         #Pop the header
         self.output = visitor.astext()
-        self.article = tostring(visitor.article, method='xml')
+        self.article = tostring(visitor.article)
         self.fragment = deepcopy(visitor.article)
         self.fragment.remove(self.fragment[0])
-        self.fragment = tostring(self.fragment, method='xml')
+        self.fragment = tostring(self.fragment)
 
     def assemble_parts(self):
         writers.Writer.assemble_parts(self)
@@ -144,8 +156,7 @@ class HTML5Translator(nodes.NodeVisitor):
 
     def astext(self):
         compact(self.html)
-        return self.doctype + "\n" + tostring(self.html,
-                pretty_print=True, method='xml')
+        return self.doctype + "\n" + tostring(self.html)
 
     def cloak_mailto(self, uri):
         """Try to hide a mailto: URL from harvesters."""
@@ -228,7 +239,7 @@ class HTML5Translator(nodes.NodeVisitor):
             "Docutils %s: http://docutils.sourceforge.net/" %
             docutils.__version__)
         etree.SubElement(self.head, "style", type="text/css").text = helper_css
-        if hasattr(self.settings, 'stylesheet'):
+        if hasattr(self.settings, 'stylesheet') and self.settings.stylesheet:
             etree.SubElement(self.head, "link", type="text/css",
                     rel="stylesheet", href=self.settings.stylesheet)
 
@@ -336,7 +347,7 @@ class HTML5Translator(nodes.NodeVisitor):
     def depart_title(self, node):
         if self.in_document_title:
             self.in_document_title = False
-            self.html_title = tostring(self.title_node, method='xml')
+            self.html_title = tostring(self.title_node)
             self.title = text_content(self.title_node)
         self.el.pop()
 
@@ -550,7 +561,7 @@ class HTML5Translator(nodes.NodeVisitor):
 
     def visit_raw(self, node):
         if 'html' in node.get('format', '').split():
-            self.cur_el().append(fromstring(node.astext()))
+            self.cur_el().append(fragment_fromstring(node.astext()))
         # Keep non-HTML raw text out of output:
         raise nodes.SkipNode
 
@@ -651,3 +662,6 @@ def compact(html_tree):
             for c in reversed(p):
                 parent.insert(index, c)
             parent.remove(p)
+    for header in html_tree.xpath('//header'):
+        if len(header) == 0:
+            header.getparent().remove(header)
