@@ -75,6 +75,13 @@ class Writer(writers.Writer):
 
     visitor_attributes = ('title', 'html_title', 'article')
 
+    settings_spec = (
+            'HTML-Specific-Options',
+            None,
+            (('Specify the stylesheet to link from in the document',
+                ['--stylesheet'], {}),))
+
+
     def __init__(self):
         writers.Writer.__init__(self)
         self.translator_class = HTML5Translator
@@ -124,6 +131,8 @@ class HTML5Translator(nodes.NodeVisitor):
                 None)
         if hasattr(self.settings, 'initial_header_level'):
             self.level = self.settings.initial_header_level - 1
+        else:
+            self.level = 0
         self.html_title = ''
         self.title = ''
         self.title_node = None
@@ -219,6 +228,9 @@ class HTML5Translator(nodes.NodeVisitor):
             "Docutils %s: http://docutils.sourceforge.net/" %
             docutils.__version__)
         etree.SubElement(self.head, "style", type="text/css").text = helper_css
+        if hasattr(self.settings, 'stylesheet'):
+            etree.SubElement(self.head, "link", type="text/css",
+                    rel="stylesheet", href=self.settings.stylesheet)
 
     def depart_document(self, node):
         pass
