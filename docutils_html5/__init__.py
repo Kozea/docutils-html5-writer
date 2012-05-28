@@ -358,6 +358,7 @@ class HTML5Translator(nodes.NodeVisitor):
         self.wrap_in_section(node)
         self.el.append(etree.SubElement(self.local_header(),
             "h" + str(self.level + 1)))
+        self.level += 1
 
     def depart_subtitle(self, node):
         self.el.pop()
