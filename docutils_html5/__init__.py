@@ -25,7 +25,7 @@ CSS for this module is based on the following principles:
 
 """
 
-helper_css = u"""
+default_css = u"""
 body { font-family: Gentium Basic; width: 40em; margin: 0 auto 0 auto; }
 .docutils dt { font-weight: bold; }
 .docutils dd { margin-bottom: 1em; }
@@ -238,10 +238,13 @@ class HTML5Translator(nodes.NodeVisitor):
         self.add_meta("generator",
             "Docutils %s: http://docutils.sourceforge.net/" %
             docutils.__version__)
-        etree.SubElement(self.head, "style", type="text/css").text = helper_css
-        if hasattr(self.settings, 'stylesheet') and self.settings.stylesheet:
-            etree.SubElement(self.head, "link", type="text/css",
-                    rel="stylesheet", href=self.settings.stylesheet)
+        if hasattr(self.settings, 'stylesheet'):
+            if self.settings.stylesheet:
+                etree.SubElement(self.head, "link", type="text/css",
+                        rel="stylesheet", href=self.settings.stylesheet)
+        else:
+            etree.SubElement(self.head, "style", type="text/css"
+            ).text = default_css
 
     def depart_document(self, node):
         pass
