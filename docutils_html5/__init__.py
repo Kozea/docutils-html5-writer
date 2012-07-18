@@ -598,6 +598,13 @@ class HTML5Translator(nodes.NodeVisitor):
         self.level -= 1
         self.depart()
 
+    def visit_container(self, node):
+        self.wrap_in_section(node)
+        self.visit('div', node)
+
+    def depart_container(self, node):
+        self.depart()
+
 
 class Tag:
     def __init__(self, html_tag_name, classes=None, attribute_map={}):
