@@ -445,7 +445,15 @@ class HTML5Translator(nodes.NodeVisitor):
 
     def visit_image(self, node):
         self.visit("img", node)
-        self.cur_el().set("src", node.attributes['uri'])
+        simple_element = self.simple_elements[node.__class__.__name__]
+        cur_el = self.cur_el()
+        cur_el.set("src", node.attributes['uri'])
+        for k in simple_element.attribute_map.keys():
+            attr = node.attributes.get(k)
+            if attr:
+                cur_el.set(simple_element.attribute_map[k], attr)
+        if not self.cur_el().get("alt"):
+            self.cur_el().set("alt", "")
 
     def depart_image(self, node):
         self.depart()
@@ -550,7 +558,7 @@ class HTML5Translator(nodes.NodeVisitor):
         if simple_element.classes:
             cur_el.set("class", simple_element.classes)
         for k in simple_element.attribute_map.keys():
-            attr = node.attributes.get(k, None)
+            attr = node.attributes.get(k)
             if attr:
                 cur_el.set(simple_element.attribute_map[k], attr)
 
