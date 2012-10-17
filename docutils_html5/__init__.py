@@ -540,7 +540,7 @@ class HTML5Translator(nodes.NodeVisitor):
         """Wrap top level paragraphs in a section element."""
         if (isinstance(node.parent, nodes.document) and
             self.section.tag == 'article'):
-            self.section = self.visit('section', node, id='id1')
+            self.section = self.visit('section', node)
 
     def visit_paragraph(self, node):
         self.wrap_in_section(node)
