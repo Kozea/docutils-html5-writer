@@ -70,14 +70,11 @@ from html5lib import treewalkers, serializer
 text_content = etree.XPath("string()")
 
 
-def tostring(lxmltree, xhtml=True, options=None, encoding='utf8'):
+def tostring(lxmltree, options=None, encoding='utf8'):
     options = options or {'omit_optional_tags': False}
     walker = treewalkers.getTreeWalker('lxml')
     stream = walker(lxmltree)
-    if xhtml:
-        s = serializer.xhtmlserializer.XHTMLSerializer(**options)
-    else:
-        s = serializer.htmlserializer.HTMLSerializer(**options)
+    s = serializer.htmlserializer.HTMLSerializer(**options)
     return s.render(stream, encoding)
 
 
@@ -88,11 +85,10 @@ class Writer(writers.Writer):
     visitor_attributes = ('title', 'html_title', 'article')
 
     settings_spec = (
-            'HTML-Specific-Options',
-            None,
-            (('Specify the stylesheet to link from in the document',
-                ['--stylesheet'], {}),))
-
+        'HTML-Specific-Options',
+        None,
+        (('Specify the stylesheet to link from in the document',
+          ['--stylesheet'], {}),))
 
     def __init__(self):
         writers.Writer.__init__(self)
@@ -122,11 +118,11 @@ class Writer(writers.Writer):
 
 def add_text(node, text):
     if len(node):
-        if node[-1].tail == None:
+        if node[-1].tail is None:
             node[-1].tail = ""
         node[-1].tail += text
     else:
-        if node.text == None:
+        if node.text is None:
             node.text = ""
         node.text += text
 
@@ -139,8 +135,8 @@ class HTML5Translator(nodes.NodeVisitor):
         nodes.NodeVisitor.__init__(self, document)
         self.settings = document.settings
         self.top_level_id = getattr(document.settings, 'top_level_id', None)
-        self.top_level_class = getattr(document.settings, 'top_level_class',
-                None)
+        self.top_level_class = getattr(
+            document.settings, 'top_level_class', None)
         if hasattr(self.settings, 'initial_header_level'):
             self.level = self.settings.initial_header_level - 1
         else:
@@ -149,8 +145,8 @@ class HTML5Translator(nodes.NodeVisitor):
         self.title = ''
         self.title_node = None
         self.in_document_title = False
-        self.settings.cloak_email_addresses = getattr(self.settings,
-            'cloak_email_addresses', False)
+        self.settings.cloak_email_addresses = getattr(
+            self.settings, 'cloak_email_addresses', False)
         self._in_topic = False
         self._in_admonition = False
 
@@ -181,8 +177,7 @@ class HTML5Translator(nodes.NodeVisitor):
 
     def visit_Text(self, node):
         text = node.astext()
-        if (isinstance(node.parent, nodes.footnote_reference) or
-            isinstance(node.parent, nodes.label)):
+        if isinstance(node.parent, (nodes.footnote_reference, nodes.label)):
             text = "[%s]" % text
         add_text(self.cur_el(), text)
 
@@ -200,8 +195,8 @@ class HTML5Translator(nodes.NodeVisitor):
         atts = {'class': 'reference'}
         if 'refuri' in node:
             atts['href'] = node['refuri']
-            if (self.settings.cloak_email_addresses
-                 and atts['href'].startswith('mailto:')):
+            if (self.settings.cloak_email_addresses and
+                    atts['href'].startswith('mailto:')):
                 atts['href'] = self.cloak_mailto(atts['href'])
                 self.in_mailto = 1
             atts['class'] += ' external'
@@ -235,16 +230,18 @@ class HTML5Translator(nodes.NodeVisitor):
         #self.header = etree.SubElement(self.article, "header")
         # The current element
         self.el = [self.article]
-        self.add_meta("generator",
+        self.add_meta(
+            "generator",
             "Docutils %s: http://docutils.sourceforge.net/" %
             docutils.__version__)
         if hasattr(self.settings, 'stylesheet'):
             if self.settings.stylesheet:
-                etree.SubElement(self.head, "link", type="text/css",
-                        rel="stylesheet", href=self.settings.stylesheet)
+                etree.SubElement(
+                    self.head, "link", type="text/css",
+                    rel="stylesheet", href=self.settings.stylesheet)
         else:
-            etree.SubElement(self.head, "style", type="text/css"
-            ).text = default_css
+            etree.SubElement(
+                self.head, "style", type="text/css").text = default_css
 
     def depart_document(self, node):
         pass
@@ -328,8 +325,9 @@ class HTML5Translator(nodes.NodeVisitor):
                     tmp = parent
 
     def add_meta(self, attr, val):
-        etree.SubElement(self.html.xpath("/html/head")[0], "meta",
-                attrib={'name': attr, 'content': val})
+        etree.SubElement(
+            self.html.xpath("/html/head")[0], "meta",
+            attrib={'name': attr, 'content': val})
 
     def visit_title(self, node):
         self.level += 1
@@ -356,8 +354,10 @@ class HTML5Translator(nodes.NodeVisitor):
 
     def visit_subtitle(self, node):
         self.wrap_in_section(node)
-        self.el.append(etree.SubElement(self.local_header(),
-            "h" + str(self.level + 1)))
+        self.el.append(
+            etree.SubElement(
+                self.local_header(),
+                "h" + str(self.level + 1)))
         self.level += 1
 
     def depart_subtitle(self, node):
@@ -473,7 +473,7 @@ class HTML5Translator(nodes.NodeVisitor):
             'upperalpha': 'upper-alpha',
             'lowerroman': 'lower-roman',
             'upperroman': 'upper-roman',
-            }[node.attributes['enumtype']]
+        }[node.attributes['enumtype']]
         if html_list_style:
             el.set("style", "list-style: %s;" % html_list_style)
 
@@ -516,8 +516,9 @@ class HTML5Translator(nodes.NodeVisitor):
         self.add("br")
 
     def visit_footnote_reference(self, node):
-        self.visit("a", node, href="#" + node.attributes['refid'],
-                id=node.attributes['ids'][0], **{"class": "ref"})
+        self.visit(
+            "a", node, href="#" + node.attributes['refid'],
+            id=node.attributes['ids'][0], **{"class": "ref"})
 
     def depart_footnote_reference(self, node):
         self.depart()
@@ -539,7 +540,7 @@ class HTML5Translator(nodes.NodeVisitor):
     def wrap_in_section(self, node):
         """Wrap top level paragraphs in a section element."""
         if (isinstance(node.parent, nodes.document) and
-            self.section.tag == 'article'):
+                self.section.tag == 'article'):
             self.section = self.visit('section', node)
 
     def visit_paragraph(self, node):
@@ -653,7 +654,7 @@ simple_elements = {         # HTML equiv.
     "tbody": Tag("tbody"),
     "term": Tag("dt"),
     "transition": Tag("hr")
-    }
+}
 
 HTML5Translator.simple_elements = simple_elements
 
