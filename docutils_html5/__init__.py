@@ -70,7 +70,7 @@ from html5lib import treewalkers, serializer
 text_content = etree.XPath("string()")
 
 
-def tostring(lxmltree, options=None, encoding='utf8'):
+def tostring(lxmltree, options=None, encoding=None):
     options = options or {'omit_optional_tags': False}
     walker = treewalkers.getTreeWalker('lxml')
     stream = walker(lxmltree)
