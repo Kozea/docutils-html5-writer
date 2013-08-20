@@ -25,7 +25,7 @@ CSS for this module is based on the following principles:
 
 """
 
-default_css = u"""
+default_css = """
 body { font-family: Gentium Basic; width: 40em; margin: 0 auto 0 auto; }
 .docutils dt { font-weight: bold; }
 .docutils dd { margin-bottom: 1em; }
@@ -256,16 +256,16 @@ class HTML5Translator(nodes.NodeVisitor):
     def encode(self, text):
         """Encode special characters in `text` & return."""
         # @@@ A codec to do these and all other HTML entities would be nice.
-        text = unicode(text)
+        text = str(text)
         return text.translate({
-            ord('&'): u'&amp;',
-            ord('<'): u'&lt;',
-            ord('"'): u'&quot;',
-            ord('>'): u'&gt;',
+            ord('&'): '&amp;',
+            ord('<'): '&lt;',
+            ord('"'): '&quot;',
+            ord('>'): '&gt;',
             # may thwart some address harvesters
-            ord('@'): u'&#64;',
+            ord('@'): '&#64;',
             # TODO: convert non-breaking space only if needed?
-            0xa0: u'&nbsp;'})  # non-breaking space
+            0xa0: '&nbsp;'})  # non-breaking space
 
     def visit(self, name, node, **attrs):
         if 'id' not in attrs:
@@ -448,7 +448,7 @@ class HTML5Translator(nodes.NodeVisitor):
         simple_element = self.simple_elements[node.__class__.__name__]
         cur_el = self.cur_el()
         cur_el.set("src", node.attributes['uri'])
-        for k in simple_element.attribute_map.keys():
+        for k in list(simple_element.attribute_map.keys()):
             attr = node.attributes.get(k)
             if attr:
                 cur_el.set(simple_element.attribute_map[k], attr)
@@ -510,7 +510,7 @@ class HTML5Translator(nodes.NodeVisitor):
 
     def visit_line(self, node):
         el = self.cur_el()
-        add_text(el, u" " * (self.line_block_indent * 4))
+        add_text(el, " " * (self.line_block_indent * 4))
 
     def depart_line(self, node):
         self.add("br")
@@ -558,7 +558,7 @@ class HTML5Translator(nodes.NodeVisitor):
         cur_el = self.visit(simple_element.html_tag_name, node)
         if simple_element.classes:
             cur_el.set("class", simple_element.classes)
-        for k in simple_element.attribute_map.keys():
+        for k in list(simple_element.attribute_map.keys()):
             attr = node.attributes.get(k)
             if attr:
                 cur_el.set(simple_element.attribute_map[k], attr)
