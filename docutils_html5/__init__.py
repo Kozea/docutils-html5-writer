@@ -133,7 +133,7 @@ def add_text(node, text):
 
 class HTML5Translator(nodes.NodeVisitor):
 
-    doctype = "<!doctype html>"
+    doctype = b"<!doctype html>"
 
     def __init__(self, document):
         nodes.NodeVisitor.__init__(self, document)
@@ -156,7 +156,7 @@ class HTML5Translator(nodes.NodeVisitor):
 
     def astext(self):
         compact(self.html)
-        return self.doctype + "\n" + tostring(self.html)
+        return self.doctype + b"\n" + tostring(self.html)
 
     def cloak_mailto(self, uri):
         """Try to hide a mailto: URL from harvesters."""
@@ -637,6 +637,7 @@ simple_elements = {         # HTML equiv.
     "field_name": Tag("td", "field-name"),
     "figure": Tag("figure"),
     "image": Tag("img", attribute_map={"uri": "src", "alt": "alt"}),
+    "inline": Tag("span"),
     "list_item": Tag("li"),
     "literal": Tag("samp"),
     "literal_block": Tag("pre"),
