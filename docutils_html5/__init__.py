@@ -349,7 +349,7 @@ class HTML5Translator(nodes.NodeVisitor):
         if self.in_document_title:
             self.in_document_title = False
             self.html_title = tostring(self.title_node)
-            self.title = text_content(self.title_node)
+            self.title = text_content(self.title_node).encode('utf8')
         self.el.pop()
 
     def visit_subtitle(self, node):
