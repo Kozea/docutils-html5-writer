@@ -129,7 +129,7 @@ def add_text(node, text):
 
 class HTML5Translator(nodes.NodeVisitor):
 
-    doctype = b"<!doctype html>"
+    doctype = "<!doctype html>"
 
     def __init__(self, document):
         nodes.NodeVisitor.__init__(self, document)
