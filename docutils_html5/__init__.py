@@ -70,12 +70,12 @@ from html5lib import treewalkers, serializer
 text_content = etree.XPath("string()")
 
 
-def tostring(lxmltree, options=None, encoding='utf8'):
+def tostring(lxmltree, options=None):
     options = options or {'omit_optional_tags': False}
     walker = treewalkers.getTreeWalker('lxml')
     stream = walker(lxmltree)
     s = serializer.htmlserializer.HTMLSerializer(**options)
-    return s.render(stream, encoding)
+    return s.render(stream)
 
 
 class Writer(writers.Writer):
@@ -152,7 +152,7 @@ class HTML5Translator(nodes.NodeVisitor):
 
     def astext(self):
         compact(self.html)
-        return self.doctype + b"\n" + tostring(self.html)
+        return self.doctype + "\n" + tostring(self.html)
 
     def cloak_mailto(self, uri):
         """Try to hide a mailto: URL from harvesters."""
@@ -349,7 +349,7 @@ class HTML5Translator(nodes.NodeVisitor):
         if self.in_document_title:
             self.in_document_title = False
             self.html_title = tostring(self.title_node)
-            self.title = text_content(self.title_node).encode('utf8')
+            self.title = text_content(self.title_node)
         self.el.pop()
 
     def visit_subtitle(self, node):
