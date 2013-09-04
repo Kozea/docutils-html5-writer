@@ -256,7 +256,10 @@ class HTML5Translator(nodes.NodeVisitor):
     def encode(self, text):
         """Encode special characters in `text` & return."""
         # @@@ A codec to do these and all other HTML entities would be nice.
-        text = unicode(text)
+        try:
+            text = text.decode('utf-8')
+        except:
+            pass  # Text is probably already decoded, python 2/3 compat
         return text.translate({
             ord('&'): u'&amp;',
             ord('<'): u'&lt;',
