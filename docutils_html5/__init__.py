@@ -75,7 +75,11 @@ def tostring(lxmltree, options=None):
     walker = treewalkers.getTreeWalker('lxml')
     stream = walker(lxmltree)
     s = serializer.htmlserializer.HTMLSerializer(**options)
-    return s.render(stream)
+    output = s.render(stream)
+    if not isinstance(output, str):
+        # Python 2
+        output = output.encode('utf-8')
+    return output
 
 
 class Writer(writers.Writer):
