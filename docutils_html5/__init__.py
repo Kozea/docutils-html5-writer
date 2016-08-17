@@ -74,7 +74,7 @@ def tostring(lxmltree, options=None):
     options = options or {'omit_optional_tags': False}
     walker = treewalkers.getTreeWalker('lxml')
     stream = walker(lxmltree)
-    s = serializer.htmlserializer.HTMLSerializer(**options)
+    s = serializer.HTMLSerializer(**options)
     output = s.render(stream)
     if not isinstance(output, str):
         # Python 2
